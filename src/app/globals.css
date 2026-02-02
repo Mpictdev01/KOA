@@ -1289,12 +1289,17 @@ body {
 }
 
 /* Slideshow Container */
+/* Slideshow Container */
 .slideshow-container {
     position: relative;
-    width: 600px;
-    /* Back to original size */
-    height: 600px;
-    /* Back to original size */
+    width: 90vw;
+        max-width: 1000px;
+        /* Ensure it has width */
+        height: auto;
+        z-index: 50;
+        /* Lower than socials if socials is 60 */
+        display: flex;
+        justify-content: center;
 }
 
 /* New Social Container (Absolute positioned) */
