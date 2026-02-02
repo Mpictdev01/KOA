@@ -4,37 +4,47 @@ import { useEffect, useRef, useState } from "react";
 export default function Preloader() {
 	const [visible, setVisible] = useState(true);
 	const preloaderRef = useRef<HTMLDivElement>(null);
-	const contentRef = useRef<HTMLDivElement>(null);
 
 	useEffect(() => {
 		const preloader = preloaderRef.current;
 		if (!preloader) return;
 
-		const images = Array.from(
-			preloader.querySelectorAll("img.masked-image"),
-		) as HTMLImageElement[];
 		const letterContainers = Array.from(
 			preloader.querySelectorAll(".letter-container"),
 		) as HTMLElement[];
 
+		// Images to preload
+		const imageUrls = [
+			"/assets/masking/k.avif",
+			"/assets/masking/o.avif",
+			// A uses k.avif too
+		];
+
 		const loadImages = async () => {
-			const promises = images.map((img) => {
-				return new Promise<void>((resolve, reject) => {
-					if (img.complete) {
-						resolve();
-					} else {
-						img.onload = () => resolve();
-						img.onerror = reject;
-					}
+			const promises = imageUrls.map((src) => {
+				return new Promise<void>((resolve) => {
+					const img = new Image();
+					img.src = src;
+					img.onload = () => resolve();
+					img.onerror = () => resolve(); // Proceed even on error
 				});
 			});
-			return Promise.all(promises);
+
+			// Limit wait time to 1.5s max
+			const timeout = new Promise<void>((resolve) => setTimeout(resolve, 1500));
+
+			return Promise.race([Promise.all(promises), timeout]);
 		};
 
 		const startExitAnimation = () => {
 			console.log("Starting exit animation");
 
-			// Exit animation for B and K (slide up letters)
+			// Exit animation for B and K (slide up letters - using container transform)
+			// Wait, previous code targeted .masked-image for exit OR .type-a-text
+			// We want to animate the CONTENT out, or the CONTAINER?
+			// Original code animated the content (target.style.animation).
+			// If we replace animation, the loop stops and exit starts. Perfect.
+
 			const slideUpLetters = [letterContainers[0], letterContainers[2]];
 			slideUpLetters.forEach((container, index) => {
 				if (container) {
@@ -42,7 +52,10 @@ export default function Preloader() {
 						const target = container.querySelector(
 							".masked-image, .type-a-text",
 						) as HTMLElement;
-						if (target) target.style.animation = "exitUp 0.8s ease-in forwards";
+						if (target) {
+							// Override the infinite loop with exit animation
+							target.style.animation = "exitUp 0.8s ease-in forwards";
+						}
 					}, index * 100);
 				}
 			});
@@ -54,20 +67,18 @@ export default function Preloader() {
 					const target = centerLetter.querySelector(
 						".masked-image, .type-a-text",
 					) as HTMLElement;
-					if (target) target.style.animation = "exitDown 0.8s ease-in forwards";
+					if (target) {
+						target.style.animation = "exitDown 0.8s ease-in forwards";
+					}
 				}
 			}, 100);
 
-			// Hide preloader after exit animation completes + 0.5s delay
+			// Hide preloader after exit animation
 			setTimeout(() => {
 				if (preloaderRef.current) {
 					preloaderRef.current.classList.add("hidden");
-					// Allow removing from DOM after fade out
 					setTimeout(() => {
 						setVisible(false);
-						// Signal to main content to show?
-						// In React, we might just unmount.
-						// But maintaining "visible" class on main content is handled by CSS transition usually
 						const mainContent = document.getElementById("main-content");
 						if (mainContent) mainContent.classList.add("visible");
 					}, 500);
@@ -86,15 +97,29 @@ export default function Preloader() {
 				}, index * 200);
 			});
 
+			// Run loop for a set time (e.g., 3s) then exit
+			// User wants "infinite loop style". This usually means until load is done.
+			// Since this is a simulated preloader, let's give it a good loop time (e.g. 4s)
+			// or just kept original timing (2s + delays).
+
 			setTimeout(
 				() => {
 					startExitAnimation();
 				},
-				2000 + letterContainers.length * 200,
+				3500, // Slight increase to enjoy the loop
 			);
 		};
 
+		// Force visible start if something goes wrong
+		const safetyTimer = setTimeout(() => {
+			if (preloaderRef.current) {
+				console.log("Safety timer triggered");
+				startPreloader();
+			}
+		}, 2000);
+
 		loadImages().then(() => {
+			clearTimeout(safetyTimer);
 			startPreloader();
 		});
 	}, []);
@@ -108,22 +133,15 @@ export default function Preloader() {
 					{/* Huruf K */}
 					<div className="letter-container">
 						<div className="mask-letter mask-k">
-							<img
-								src="/assets/masking/k.avif"
-								alt="K"
-								className="masked-image"
-							/>
+							{/* Replaced img with div for background scrolling */}
+							<div className="masked-image" />
 						</div>
 					</div>
 
 					{/* Huruf O */}
 					<div className="letter-container">
 						<div className="mask-letter mask-o">
-							<img
-								src="/assets/masking/o.avif"
-								alt="O"
-								className="masked-image"
-							/>
+							<div className="masked-image" />
 						</div>
 					</div>
 
