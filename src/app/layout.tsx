@@ -9,13 +9,11 @@ export const metadata: Metadata = {
 	openGraph: {
 		title: "KOA",
 		type: "website",
-		images: [{ url: "/main.png" }],
 		siteName: "KOA",
 	},
 	twitter: {
 		card: "summary_large_image",
 		title: "KOA",
-		images: ["/main.png"],
 	},
 };
 

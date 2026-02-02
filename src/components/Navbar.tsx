@@ -4,7 +4,7 @@ import Socials from "./Socials";
 
 export default function Navbar() {
 	// Config
-	const [contractAddress] = useState(""); // Default empty
+	const [contractAddress] = useState("CONTRACT_ADDRESS"); // Default empty
 	const buyBaseUrl = "https://letsbonk.fun";
 
 	// UI State for CA
@@ -16,9 +16,7 @@ export default function Navbar() {
 	const isCASet = contractAddress && contractAddress.trim() !== "";
 
 	// Logic for links
-	const buyLink = isCASet
-		? `${buyBaseUrl}/token/${contractAddress}`
-		: buyBaseUrl;
+	const buyLink = "#";
 
 	const handleCAClick = async () => {
 		if (!isCASet) {
